@@ -1,4 +1,5 @@
 import Sidebar from "@/components/dashboard/sidebar";
+import Providers from "@/components/providers/monitor-provider";
 
 export default function DashboardLayout({
   children,
@@ -6,13 +7,14 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#faf8f2]">
-      <Sidebar />
+    <Providers>
+      <div className="min-h-screen bg-[#f5f5ef]">
+        <Sidebar />
 
-      <main className="ml-[280px] min-h-screen">
-        {children}
-      </main>
-    </div>
+        <main className="ml-[280px] min-h-screen">
+          {children}
+        </main>
+      </div>
+    </Providers>
   );
 }
-

@@ -1,98 +1,122 @@
 "use client";
 
-import { useState, useEffect } from "react";
-
-import Topbar from "@/components/dashboard/topbar";
+import { useMemo } from "react";
+import { useMonitors } from "@/context/MonitorContext";
 import StatsCard from "@/components/dashboard/stats-card";
+import MonitorsTable from "@/components/dashboard/monitors-table";
 import UptimeSection from "@/components/dashboard/uptime-section";
 import RecentIncidents from "@/components/dashboard/recent-incidents";
-import MonitorsTable from "@/components/dashboard/monitors-table";
-import AddMonitorModal from "@/components/dashboard/add-monitor-modal";
 
-import { monitors as initialMonitors } from "@/lib/monitor-data";
-import type { Monitor } from "@/lib/monitor-data";
+export default function DashboardPage() {
+  const { monitors, deleteMonitor } = useMonitors();
 
-export default function Dashboard() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [monitors, setMonitors] = useState<Monitor[]>(initialMonitors);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+  const stats = useMemo(() => {
+    const total = monitors.length;
 
-  // Load saved monitors when the browser opens
-  useEffect(() => {
-    try {
-      const savedMonitors = localStorage.getItem("pulse-monitor-monitors");
+    const operational = monitors.filter(
+      (monitor) => monitor.status === "Operational"
+    ).length;
 
-      if (savedMonitors) {
-        setMonitors(JSON.parse(savedMonitors));
-      }
-    } catch (error) {
-      console.error("Failed to load monitors:", error);
-    }
+    const down = monitors.filter(
+      (monitor) => monitor.status === "Down"
+    ).length;
 
-    setLoaded(true);
-  }, []);
+    const pending = monitors.filter(
+      (monitor) => monitor.status === "Pending"
+    ).length;
 
-  // Save monitors whenever the list changes
-  useEffect(() => {
-    if (!loaded) return;
-
-    localStorage.setItem(
-      "pulse-monitor-monitors",
-      JSON.stringify(monitors)
-    );
-  }, [monitors, loaded]);
-
-  // Add a new monitor
-  function handleAddMonitor(newMonitor: Monitor) {
-    setMonitors((prev) => [newMonitor, ...prev]);
-  }
-
-  // Delete a monitor
-  function handleDeleteMonitor(id: string) {
-    setMonitors((prev) => prev.filter((monitor) => monitor.id !== id));
-  }
+    return { total, operational, down, pending };
+  }, [monitors]);
 
   return (
-    <>
-      <section className="min-h-screen">
-        <Topbar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-        />
+    <div className="min-h-screen bg-[#f5f5ef] px-8 py-8 lg:px-10">
+      {/* Header */}
+      <div className="mb-8">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8b968b]">
+          Overview
+        </p>
 
-        <div
-          className="min-h-[430px] bg-top bg-no-repeat"
-          style={{
-            backgroundImage:
-              "url('https://res.cloudinary.com/dcmio3bme/image/upload/v1794140739/dashboard_wjhg7j.png')",
-            backgroundSize: "100% auto",
-          }}
-        />
+        <h1 className="text-4xl font-semibold tracking-tight text-[#24372d]">
+          Dashboard
+        </h1>
 
-        <div className="relative z-10 -mt-12 px-8 pb-10">
-          <StatsCard />
-          <UptimeSection />
+        <p className="mt-2 text-sm text-[#899188]">
+          Your infrastructure overview at a glance.
+        </p>
+      </div>
 
-          <div className="mt-7">
-            <RecentIncidents />
+      {/* Statistics */}
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          {
+            title: "Total Monitors",
+            value: stats.total,
+            description: "Tracked endpoints",
+          },
+          {
+            title: "Operational",
+            value: stats.operational,
+            description: "Currently healthy",
+          },
+          {
+            title: "Down",
+            value: stats.down,
+            description: "Needs attention",
+          },
+          {
+            title: "Pending",
+            value: stats.pending,
+            description: "Awaiting first check",
+          },
+        ].map((stat) => (
+          <div
+            key={stat.title}
+            className="rounded-2xl border border-[#e5e6dd] bg-white p-5 shadow-sm"
+          >
+            <p className="text-sm text-[#92998f]">{stat.title}</p>
+
+            <h2 className="mt-3 text-3xl font-semibold text-[#304438]">
+              {stat.value}
+            </h2>
+
+            <p className="mt-2 text-xs text-[#a0a69e]">
+              {stat.description}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Dashboard sections */}
+      <div className="space-y-6">
+        {/* Monitor Table */}
+        <section className="rounded-2xl border border-[#e5e6dd] bg-white p-5 shadow-sm">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-[#304438]">
+                Your Monitors
+              </h2>
+
+              <p className="mt-1 text-sm text-[#929a91]">
+                Manage and track your endpoints.
+              </p>
+            </div>
           </div>
 
           <MonitorsTable
             monitors={monitors}
-            searchQuery={searchQuery}
-            onAddMonitor={() => setModalOpen(true)}
-            onDeleteMonitor={handleDeleteMonitor}
+            onAddMonitor={() => {
+              window.location.href = "/monitors";
+            }}
+            onDeleteMonitor={deleteMonitor}
           />
-        </div>
-      </section>
+        </section>
 
-      <AddMonitorModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onAdd={handleAddMonitor}
-      />
-    </>
+        {/* Uptime */}
+        <UptimeSection />
+
+        {/* Recent Incidents */}
+        <RecentIncidents />
+      </div>
+    </div>
   );
 }
-
