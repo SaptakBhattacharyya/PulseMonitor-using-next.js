@@ -3,67 +3,155 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useState,
+  useEffect,
   ReactNode,
 } from "react";
 
 import type { Monitor } from "@/lib/monitor-data";
+export type { Monitor };
 
 type MonitorContextType = {
   monitors: Monitor[];
-  addMonitor: (monitor: Monitor) => void;
-  updateMonitor: (monitor: Monitor) => void;
-  deleteMonitor: (id: string) => void;
+  isLoaded: boolean;
+  addMonitor: (monitor: Monitor) => Promise<void>;
+  updateMonitor: (id: string, updates: Partial<Monitor>) => Promise<void>;
+  deleteMonitor: (id: string) => Promise<void>;
 };
 
 const MonitorContext = createContext<MonitorContextType | undefined>(undefined);
-
-const STORAGE_KEY = "pulse-monitor-monitors";
 
 export function MonitorProvider({ children }: { children: ReactNode }) {
   const [monitors, setMonitors] = useState<Monitor[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load saved monitors when the app starts
+  // Fetch monitors from MongoDB
   useEffect(() => {
-    try {
-      const savedMonitors = localStorage.getItem(STORAGE_KEY);
+    async function fetchMonitors() {
+      try {
+        const response = await fetch("/api/monitors");
+        const data = await response.json();
 
-      if (savedMonitors) {
-        setMonitors(JSON.parse(savedMonitors));
-      } else {
-        setMonitors([]);
+        if (data.success) {
+          const formattedMonitors = data.monitors.map((monitor: any) => ({
+            id: monitor._id,
+            name: monitor.name,
+            url: monitor.url,
+            method: monitor.method,
+            interval: monitor.interval,
+            timeout: monitor.timeout,
+            status: monitor.status,
+            uptime: `${monitor.uptime.toFixed(2)}%`,
+            response: `${monitor.response} ms`,
+            checked: monitor.lastChecked
+              ? new Date(monitor.lastChecked).toLocaleString()
+              : "Never",
+          }));
+
+          setMonitors(formattedMonitors);
+        }
+      } catch (error) {
+        console.error("Failed to fetch monitors:", error);
+      } finally {
+        setIsLoaded(true);
       }
-    } catch (error) {
-      console.error("Failed to load monitors:", error);
-      setMonitors([]);
     }
 
-    setIsLoaded(true);
+    fetchMonitors();
   }, []);
 
-  // Save monitors whenever they change
-  useEffect(() => {
-    if (!isLoaded) return;
+  // Add monitor to MongoDB
+  const addMonitor = async (monitor: Monitor) => {
+    const response = await fetch("/api/monitors", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: monitor.name,
+        url: monitor.url,
+        method: monitor.method,
+        interval: monitor.interval,
+        timeout: monitor.timeout,
+      }),
+    });
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(monitors));
-  }, [monitors, isLoaded]);
+    const data = await response.json();
 
-  // Add a new monitor
-  const addMonitor = (monitor: Monitor) => {
-    setMonitors((prev) => [monitor, ...prev]);
+    if (!data.success) {
+      throw new Error(data.message || "Failed to add monitor");
+    }
+
+    const newMonitor = data.monitor;
+
+    setMonitors((prev) => [
+      {
+        id: newMonitor._id,
+        name: newMonitor.name,
+        url: newMonitor.url,
+        method: newMonitor.method,
+        interval: newMonitor.interval,
+        timeout: newMonitor.timeout,
+        status: newMonitor.status,
+        uptime: `${newMonitor.uptime.toFixed(2)}%`,
+        response: `${newMonitor.response} ms`,
+        checked: newMonitor.lastChecked
+          ? new Date(newMonitor.lastChecked).toLocaleString()
+          : "Never",
+      },
+      ...prev,
+    ]);
   };
 
-  // Update an existing monitor
-  const updateMonitor = (monitor: Monitor) => {
+  // Update monitor in MongoDB
+  const updateMonitor = async (id: string, updates: Partial<Monitor>) => {
+    const response = await fetch(`/api/monitors/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updates),
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.message || "Failed to update monitor");
+    }
+
+    const updatedMonitor = data.monitor;
+
     setMonitors((prev) =>
-      prev.map((item) => (item.id === monitor.id ? monitor : item))
+      prev.map((monitor) =>
+        monitor.id === id
+          ? {
+              ...monitor,
+              name: updatedMonitor.name,
+              url: updatedMonitor.url,
+              method: updatedMonitor.method,
+              interval: updatedMonitor.interval,
+              timeout: updatedMonitor.timeout,
+              status: updatedMonitor.status,
+              uptime: `${updatedMonitor.uptime.toFixed(2)}%`,
+              response: `${updatedMonitor.response} ms`,
+            }
+          : monitor
+      )
     );
   };
 
-  // Delete a monitor
-  const deleteMonitor = (id: string) => {
+  // Delete monitor from MongoDB
+  const deleteMonitor = async (id: string) => {
+    const response = await fetch(`/api/monitors/${id}`, {
+      method: "DELETE",
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.message || "Failed to delete monitor");
+    }
+
     setMonitors((prev) => prev.filter((monitor) => monitor.id !== id));
   };
 
@@ -71,6 +159,7 @@ export function MonitorProvider({ children }: { children: ReactNode }) {
     <MonitorContext.Provider
       value={{
         monitors,
+        isLoaded,
         addMonitor,
         updateMonitor,
         deleteMonitor,
@@ -81,7 +170,6 @@ export function MonitorProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Custom hook
 export function useMonitors() {
   const context = useContext(MonitorContext);
 

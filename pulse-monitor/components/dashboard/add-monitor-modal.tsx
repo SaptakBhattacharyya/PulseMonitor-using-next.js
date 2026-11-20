@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { X, Globe, Loader2, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Globe, Loader2, AlertCircle } from "lucide-react";
 import type { Monitor } from "@/lib/monitor-data";
 
 type AddMonitorModalProps = {
   open: boolean;
   onClose: () => void;
-  onAdd: (monitor: Monitor) => void;
+  onAdd: (monitor: Monitor) => Promise<void>;
   monitorToEdit?: Monitor | null;
 };
 
@@ -21,29 +21,28 @@ export default function AddMonitorModal({
   const [url, setUrl] = useState("");
   const [method, setMethod] = useState<"GET" | "HEAD" | "POST">("GET");
   const [interval, setIntervalValue] = useState(5);
-  const [timeout, setTimeoutValue] = useState(10);
+  const [timeout, setTimeoutValue] = useState(30);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const isEditing = Boolean(monitorToEdit);
-
   useEffect(() => {
-    if (monitorToEdit) {
-      setName(monitorToEdit.name);
-      setUrl(monitorToEdit.url);
-      setMethod(monitorToEdit.method);
-      setIntervalValue(monitorToEdit.interval);
-      setTimeoutValue(monitorToEdit.timeout);
-    } else {
-      setName("");
-      setUrl("");
-      setMethod("GET");
-      setIntervalValue(5);
-      setTimeoutValue(10);
+    if (open) {
+      if (monitorToEdit) {
+        setName(monitorToEdit.name);
+        setUrl(monitorToEdit.url);
+        setMethod(monitorToEdit.method);
+        setIntervalValue(monitorToEdit.interval);
+        setTimeoutValue(monitorToEdit.timeout);
+      } else {
+        setName("");
+        setUrl("");
+        setMethod("GET");
+        setIntervalValue(5);
+        setTimeoutValue(30);
+      }
+      setError("");
     }
-
-    setError("");
-  }, [monitorToEdit, open]);
+  }, [open, monitorToEdit]);
 
   if (!open) return null;
 
@@ -51,14 +50,14 @@ export default function AddMonitorModal({
     e.preventDefault();
     setError("");
 
-    if (!name.trim() || !url.trim()) {
-      setError("Please fill in all required fields.");
+    if (!name.trim()) {
+      setError("Monitor name is required.");
       return;
     }
 
     let formattedUrl = url.trim();
 
-    if (!/^https?:\/\//i.test(formattedUrl)) {
+    if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
       formattedUrl = `https://${formattedUrl}`;
     }
 
@@ -72,8 +71,8 @@ export default function AddMonitorModal({
     setLoading(true);
 
     try {
-      // Perform an actual URL check
-      const response = await fetch("/api/monitors/check", {
+      // Check website availability
+      const checkResponse = await fetch("/api/monitors/check", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -84,16 +83,17 @@ export default function AddMonitorModal({
         }),
       });
 
-      const data = await response.json();
+      const checkData = await checkResponse.json();
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "Failed to check website.");
+      if (!checkResponse.ok || !checkData.success) {
+        throw new Error(checkData.message || "Website check failed.");
       }
 
-      const result = data.monitor;
+      const result = checkData.monitor;
 
-      const monitor: Monitor = {
-        id: monitorToEdit?.id || crypto.randomUUID(),
+      // Prepare monitor
+      const newMonitor: Monitor = {
+        id: monitorToEdit?.id || "",
         name: name.trim(),
         url: formattedUrl,
         method,
@@ -105,13 +105,15 @@ export default function AddMonitorModal({
         checked: "Just now",
       };
 
-      onAdd(monitor);
+      // Save to MongoDB through context
+      await onAdd(newMonitor);
+
       onClose();
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Unable to check the website. Please try again."
+          : "Something went wrong while creating the monitor."
       );
     } finally {
       setLoading(false);
@@ -119,70 +121,72 @@ export default function AddMonitorModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-[#fffefa] shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="w-full max-w-lg rounded-2xl bg-[#fffdf7] shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#e9eae3] px-6 py-5">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-[#edf3ed] p-2 text-[#42654f]">
-              <Globe size={19} />
-            </div>
-
-            <div>
-              <h2 className="text-lg font-semibold text-[#304438]">
-                {isEditing ? "Edit Monitor" : "Add New Monitor"}
-              </h2>
-              <p className="text-xs text-[#929a91]">
-                Configure your endpoint monitoring
-              </p>
-            </div>
+        <div className="flex items-center justify-between border-b border-[#e7e7df] px-6 py-5">
+          <div>
+            <h2 className="text-xl font-semibold text-[#263b32]">
+              {monitorToEdit ? "Edit Monitor" : "Add New Monitor"}
+            </h2>
+            <p className="mt-1 text-sm text-[#969b92]">
+              {monitorToEdit
+                ? "Update your endpoint monitoring settings"
+                : "Track your website's availability"}
+            </p>
           </div>
 
           <button
-            type="button"
             onClick={onClose}
             disabled={loading}
-            className="rounded-lg p-2 text-[#90988f] transition hover:bg-[#f0f1eb]"
+            className="rounded-lg p-2 text-[#72776f] transition hover:bg-[#f0f0e8]"
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5 p-6">
-          {/* Monitor name */}
+          {/* Name */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-[#45564a]">
+            <label className="mb-2 block text-sm font-medium text-[#35483d]">
               Monitor Name
             </label>
 
             <input
+              type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. My Portfolio"
-              disabled={loading}
-              className="w-full rounded-xl border border-[#e4e6de] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#65836d]"
+              placeholder="My Website"
+              className="w-full rounded-xl border border-[#dedfd6] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#718b75]"
             />
           </div>
 
           {/* URL */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-[#45564a]">
+            <label className="mb-2 block text-sm font-medium text-[#35483d]">
               Website URL
             </label>
 
-            <input
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com"
-              disabled={loading}
-              className="w-full rounded-xl border border-[#e4e6de] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#65836d]"
-            />
+            <div className="relative">
+              <Globe
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#969b92]"
+              />
+
+              <input
+                type="text"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="https://example.com"
+                className="w-full rounded-xl border border-[#dedfd6] bg-white py-3 pl-10 pr-4 text-sm outline-none transition focus:border-[#718b75]"
+              />
+            </div>
           </div>
 
           {/* Method */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-[#45564a]">
+            <label className="mb-2 block text-sm font-medium text-[#35483d]">
               HTTP Method
             </label>
 
@@ -191,92 +195,72 @@ export default function AddMonitorModal({
               onChange={(e) =>
                 setMethod(e.target.value as "GET" | "HEAD" | "POST")
               }
-              disabled={loading}
-              className="w-full rounded-xl border border-[#e4e6de] bg-white px-4 py-3 text-sm outline-none focus:border-[#65836d]"
+              className="w-full rounded-xl border border-[#dedfd6] bg-white px-4 py-3 text-sm outline-none focus:border-[#718b75]"
             >
               <option value="GET">GET</option>
               <option value="HEAD">HEAD</option>
               <option value="POST">POST</option>
             </select>
 
-            <p className="mt-1 text-xs text-[#9ba198]">
-              The current monitoring engine checks using GET requests.
+            <p className="mt-1 text-xs text-[#969b92]">
+              Website availability is currently checked using GET requests.
             </p>
           </div>
 
-          {/* Interval & Timeout */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-[#45564a]">
-                Check Interval
-              </label>
+          {/* Interval */}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-[#35483d]">
+              Check Interval
+            </label>
 
-              <select
-                value={interval}
-                onChange={(e) => setIntervalValue(Number(e.target.value))}
-                disabled={loading}
-                className="w-full rounded-xl border border-[#e4e6de] bg-white px-4 py-3 text-sm outline-none focus:border-[#65836d]"
-              >
-                <option value={1}>1 minute</option>
-                <option value={5}>5 minutes</option>
-                <option value={10}>10 minutes</option>
-                <option value={15}>15 minutes</option>
-                <option value={30}>30 minutes</option>
-              </select>
-            </div>
+            <select
+              value={interval}
+              onChange={(e) => setIntervalValue(Number(e.target.value))}
+              className="w-full rounded-xl border border-[#dedfd6] bg-white px-4 py-3 text-sm outline-none focus:border-[#718b75]"
+            >
+              <option value={1}>Every 1 minute</option>
+              <option value={5}>Every 5 minutes</option>
+              <option value={10}>Every 10 minutes</option>
+              <option value={15}>Every 15 minutes</option>
+              <option value={30}>Every 30 minutes</option>
+              <option value={60}>Every 60 minutes</option>
+            </select>
+          </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-[#45564a]">
-                Timeout
-              </label>
+          {/* Timeout */}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-[#35483d]">
+              Timeout
+            </label>
 
-              <select
-                value={timeout}
-                onChange={(e) => setTimeoutValue(Number(e.target.value))}
-                disabled={loading}
-                className="w-full rounded-xl border border-[#e4e6de] bg-white px-4 py-3 text-sm outline-none focus:border-[#65836d]"
-              >
-                <option value={5}>5 seconds</option>
-                <option value={10}>10 seconds</option>
-                <option value={15}>15 seconds</option>
-                <option value={20}>20 seconds</option>
-                <option value={30}>30 seconds</option>
-              </select>
-            </div>
+            <select
+              value={timeout}
+              onChange={(e) => setTimeoutValue(Number(e.target.value))}
+              className="w-full rounded-xl border border-[#dedfd6] bg-white px-4 py-3 text-sm outline-none focus:border-[#718b75]"
+            >
+              <option value={5}>5 seconds</option>
+              <option value={10}>10 seconds</option>
+              <option value={15}>15 seconds</option>
+              <option value={20}>20 seconds</option>
+              <option value={30}>30 seconds</option>
+            </select>
           </div>
 
           {/* Error */}
           {error && (
-            <div className="rounded-xl border border-[#f0d4d0] bg-[#fff1ef] px-4 py-3 text-sm text-[#bd6259]">
-              {error}
+            <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+              <AlertCircle size={18} className="mt-0.5 shrink-0" />
+              <span>{error}</span>
             </div>
           )}
 
-          {/* Info */}
-          <div className="rounded-xl bg-[#f1f4ef] p-4">
-            <div className="flex gap-2">
-              <CheckCircle2 size={17} className="mt-0.5 text-[#5c8768]" />
-
-              <div>
-                <p className="text-sm font-medium text-[#48604e]">
-                  Real-time initial check
-                </p>
-
-                <p className="mt-1 text-xs leading-5 text-[#879187]">
-                  Your website will be checked immediately when you add it. Its
-                  response time and availability will be recorded.
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* Buttons */}
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="rounded-xl border border-[#e4e6de] px-5 py-3 text-sm font-medium text-[#647166] transition hover:bg-[#f5f5f0]"
+              className="flex-1 rounded-xl border border-[#dedfd6] px-4 py-3 text-sm font-medium text-[#35483d] transition hover:bg-[#f3f3eb]"
             >
               Cancel
             </button>
@@ -284,15 +268,18 @@ export default function AddMonitorModal({
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center justify-center gap-2 rounded-xl bg-[#244d3b] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#183b2c] disabled:cursor-not-allowed disabled:opacity-70"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#35483d] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#263b32] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading && <Loader2 size={16} className="animate-spin" />}
-
-              {loading
-                ? "Checking website..."
-                : isEditing
-                ? "Save Changes"
-                : "Add Monitor"}
+              {loading ? (
+                <>
+                  <Loader2 size={17} className="animate-spin" />
+                  Checking...
+                </>
+              ) : monitorToEdit ? (
+                "Save Changes"
+              ) : (
+                "Add Monitor"
+              )}
             </button>
           </div>
         </form>

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkMonitor } from "@/lib/monitoring-engine";
 import { z } from "zod";
 
-export const runtime = "nodejs";
 
 const monitorSchema = z.object({
   url: z.string().trim().url("Please provide a valid URL"),

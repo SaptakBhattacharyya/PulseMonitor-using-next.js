@@ -1,6 +1,6 @@
 "use client";
 
-import {Area,AreaChart,CartesianGrid,Cell,Pie,PieChart,ResponsiveContainer,Tooltip,XAxis,YAxis,} from "recharts";
+import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis, } from "recharts";
 import { TrendingUp, Activity } from "lucide-react";
 
 const uptimeData = [
@@ -22,11 +22,11 @@ const COLORS = ["#397b61", "#e9b7a8"];
 
 export default function UptimeSection() {
   return (
-    <section className="mt-7 grid grid-cols-1 gap-6 xl:grid-cols-5">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
 
       {/* Overall Uptime */}
 
-      <div className="rounded-2xl border border-[#e8e5dc] bg-white/80 p-6 shadow-sm xl:col-span-2">
+      <div className="rounded-2xl border border-[#e8e5dc] bg-white/95 p-6 shadow-sm backdrop-blur-sm lg:col-span-2">
 
         <div className="flex items-center justify-between">
 
@@ -118,7 +118,7 @@ export default function UptimeSection() {
 
       {/* Uptime Trend */}
 
-      <div className="rounded-2xl border border-[#e8e5dc] bg-white/80 p-6 shadow-sm xl:col-span-3">
+      <div className="rounded-2xl border border-[#e8e5dc] bg-white/95 p-6 shadow-sm backdrop-blur-sm lg:col-span-3">
 
         <div className="flex items-center justify-between">
 
@@ -228,6 +228,6 @@ export default function UptimeSection() {
 
       </div>
 
-    </section>
+    </div>
   );
 }
