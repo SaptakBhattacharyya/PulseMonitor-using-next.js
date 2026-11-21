@@ -51,7 +51,6 @@ export default function DashboardPage() {
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#f5f5ef]">
-      {/* Top Background Layer: "Welcome Back" Header & Glowing Earth Graphic */}
       <div
         className="pointer-events-none absolute left-0 right-0 top-0 h-[480px] sm:h-[540px] lg:h-[600px] overflow-hidden"
         style={{
@@ -63,7 +62,6 @@ export default function DashboardPage() {
         }}
       />
 
-      {/* Bottom Background Layer: Green Wave Graphic placed cleanly at the bottom */}
       <div
         className="pointer-events-none absolute bottom-0 left-0 right-0 h-[280px] sm:h-[340px] lg:h-[400px] overflow-hidden"
         style={{
@@ -76,7 +74,6 @@ export default function DashboardPage() {
       />
 
       <div className="relative z-10 min-h-screen px-6 py-6 lg:px-10">
-        {/* Top Header Row with Topbar on the right */}
         <div className="flex items-center justify-end pb-4">
           <div className="w-full lg:w-[60%] xl:w-[55%]">
             <Topbar
@@ -86,21 +83,17 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Spacing to reveal the "Welcome Back" hero banner and the Earth graphic */}
         <div className="h-44 sm:h-60 lg:h-72 xl:h-80" />
 
         <div className="mx-auto w-full max-w-[1600px] space-y-8 pb-12">
-          {/* 1. Stat cards in horizontal manner */}
           <section>
             <StatsCard stats={stats} />
           </section>
 
-          {/* 2. The two charts in display flex side by side */}
           <section>
             <UptimeSection />
           </section>
 
-          {/* 3. Below that comes the monitors */}
           <section>
             <MonitorsTable
               monitors={monitors}
@@ -110,7 +103,6 @@ export default function DashboardPage() {
             />
           </section>
 
-          {/* 4. Below that comes the recent incidents */}
           <section>
             <RecentIncidents />
           </section>

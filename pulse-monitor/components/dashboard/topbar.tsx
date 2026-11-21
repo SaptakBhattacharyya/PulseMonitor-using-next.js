@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import {Search,Bell,ChevronDown,Settings,User,LogOut,CalendarDays,} from "lucide-react";
+import {
+  Search,
+  Bell,
+  ChevronDown,
+  Settings,
+  User,
+  LogOut,
+  CalendarDays,
+} from "lucide-react";
 
 type TopbarProps = {
   searchQuery?: string;
@@ -16,9 +24,6 @@ export default function Topbar({
 
   return (
     <header className="flex h-[76px] items-center justify-between bg-transparent px-2 sm:px-4">
-
-      {/* Search */}
-
       <div className="relative w-full max-w-md">
         <Search
           size={18}
@@ -38,12 +43,7 @@ export default function Topbar({
         </kbd>
       </div>
 
-      {/* Right Section */}
-
       <div className="ml-6 flex shrink-0 items-center gap-3">
-
-        {/* Date */}
-
         <div className="hidden items-center gap-2 rounded-xl border border-[#e8e5dc]/70 bg-white/60 px-3 py-2 text-xs font-medium text-slate-600 backdrop-blur-md lg:flex">
           <CalendarDays size={15} />
 
@@ -54,18 +54,13 @@ export default function Topbar({
           })}
         </div>
 
-        {/* Notifications */}
-
         <button className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-[#e8e5dc]/80 bg-white/70 backdrop-blur-md transition hover:bg-white">
           <Bell size={19} className="text-[#163d32]" />
 
           <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-[#d5a65d]" />
         </button>
 
-        {/* Profile */}
-
         <div className="relative">
-
           <button
             onClick={() => setProfileOpen(!profileOpen)}
             className="flex items-center gap-2 rounded-xl border border-[#e8e5dc]/80 bg-white/70 px-2.5 py-1.5 backdrop-blur-md transition hover:bg-white"
@@ -89,7 +84,6 @@ export default function Topbar({
 
           {profileOpen && (
             <div className="absolute right-0 top-14 z-50 w-56 overflow-hidden rounded-xl border border-[#e8e5dc] bg-white shadow-xl">
-
               <div className="border-b border-[#efeee8] px-4 py-3">
                 <p className="text-sm font-semibold text-[#163d32]">
                   Saptak Bhattacharyya
@@ -119,7 +113,6 @@ export default function Topbar({
             </div>
           )}
         </div>
-
       </div>
     </header>
   );

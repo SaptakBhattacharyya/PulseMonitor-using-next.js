@@ -1,4 +1,4 @@
-import {AlertTriangle,CheckCircle2,Clock,ArrowUpRight,} from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, ArrowUpRight } from "lucide-react";
 
 const incidents = [
   {
@@ -27,11 +27,7 @@ const incidents = [
 export default function RecentIncidents() {
   return (
     <div className="rounded-2xl border border-[#e8e5dc] bg-white/80 p-6 shadow-sm">
-
-      {/* Header */}
-
       <div className="flex items-center justify-between">
-
         <div>
           <h2 className="text-lg font-bold text-[#163d32]">
             Recent Incidents
@@ -46,22 +42,14 @@ export default function RecentIncidents() {
           View all
           <ArrowUpRight size={16} />
         </button>
-
       </div>
 
-      {/* Incidents */}
-
       <div className="mt-6 space-y-5">
-
         {incidents.map((incident, index) => (
-
           <div
             key={index}
             className="flex gap-4 border-b border-[#efeee8] pb-5 last:border-0 last:pb-0"
           >
-
-            {/* Icon */}
-
             <div
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
                 incident.status === "Resolved"
@@ -76,12 +64,8 @@ export default function RecentIncidents() {
               )}
             </div>
 
-            {/* Details */}
-
             <div className="min-w-0 flex-1">
-
               <div className="flex flex-wrap items-center justify-between gap-2">
-
                 <h3 className="text-sm font-semibold text-[#163d32]">
                   {incident.title}
                 </h3>
@@ -95,7 +79,6 @@ export default function RecentIncidents() {
                 >
                   {incident.status}
                 </span>
-
               </div>
 
               <p className="mt-1 truncate text-xs text-slate-500">
@@ -103,7 +86,6 @@ export default function RecentIncidents() {
               </p>
 
               <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-slate-400">
-
                 <span className="flex items-center gap-1">
                   <Clock size={12} />
                   {incident.time}
@@ -112,17 +94,11 @@ export default function RecentIncidents() {
                 <span>
                   Duration: {incident.duration}
                 </span>
-
               </div>
-
             </div>
-
           </div>
-
         ))}
-
       </div>
-
     </div>
   );
 }

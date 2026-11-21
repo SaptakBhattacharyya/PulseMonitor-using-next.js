@@ -1,6 +1,17 @@
 "use client";
 
-import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis, } from "recharts";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { TrendingUp, Activity } from "lucide-react";
 
 const uptimeData = [
@@ -23,13 +34,8 @@ const COLORS = ["#397b61", "#e9b7a8"];
 export default function UptimeSection() {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-
-      {/* Overall Uptime */}
-
       <div className="rounded-2xl border border-[#e8e5dc] bg-white/95 p-6 shadow-sm backdrop-blur-sm lg:col-span-2">
-
         <div className="flex items-center justify-between">
-
           <div>
             <h2 className="text-lg font-bold text-[#163d32]">
               Overall Uptime
@@ -43,15 +49,11 @@ export default function UptimeSection() {
           <div className="rounded-xl bg-green-50 p-3 text-green-700">
             <Activity size={21} />
           </div>
-
         </div>
 
         <div className="relative mt-5 h-[230px]">
-
           <ResponsiveContainer width="100%" height="100%">
-
             <PieChart>
-
               <Pie
                 data={uptimeData}
                 cx="50%"
@@ -73,15 +75,10 @@ export default function UptimeSection() {
               <Tooltip
                 formatter={(value) => [`${value}%`, ""]}
               />
-
             </PieChart>
-
           </ResponsiveContainer>
 
-          {/* Center Text */}
-
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-
             <span className="text-4xl font-bold text-[#163d32]">
               96.5%
             </span>
@@ -89,15 +86,10 @@ export default function UptimeSection() {
             <span className="mt-1 text-xs text-slate-500">
               Uptime
             </span>
-
           </div>
-
         </div>
 
-        {/* Legend */}
-
         <div className="mt-3 flex justify-center gap-7">
-
           <div className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-[#397b61]" />
             <span className="text-xs text-slate-600">
@@ -111,17 +103,11 @@ export default function UptimeSection() {
               Downtime
             </span>
           </div>
-
         </div>
-
       </div>
 
-      {/* Uptime Trend */}
-
       <div className="rounded-2xl border border-[#e8e5dc] bg-white/95 p-6 shadow-sm backdrop-blur-sm lg:col-span-3">
-
         <div className="flex items-center justify-between">
-
           <div>
             <h2 className="text-lg font-bold text-[#163d32]">
               Uptime Trend
@@ -136,13 +122,10 @@ export default function UptimeSection() {
             <TrendingUp size={15} />
             Stable
           </div>
-
         </div>
 
         <div className="mt-7 h-[250px]">
-
           <ResponsiveContainer width="100%" height="100%">
-
             <AreaChart
               data={trendData}
               margin={{
@@ -152,7 +135,6 @@ export default function UptimeSection() {
                 bottom: 0,
               }}
             >
-
               <defs>
                 <linearGradient
                   id="uptimeGradient"
@@ -219,15 +201,10 @@ export default function UptimeSection() {
                   strokeWidth: 3,
                 }}
               />
-
             </AreaChart>
-
           </ResponsiveContainer>
-
         </div>
-
       </div>
-
     </div>
   );
 }

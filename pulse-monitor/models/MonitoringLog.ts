@@ -2,6 +2,7 @@ import mongoose, { Schema, Model } from "mongoose";
 
 export interface IMonitoringLog {
   monitorId: mongoose.Types.ObjectId;
+  monitor?: mongoose.Types.ObjectId;
 
   status: "Operational" | "Down";
 
@@ -10,6 +11,7 @@ export interface IMonitoringLog {
   statusCode: number | null;
 
   errorMessage: string | null;
+  error?: string | null;
 
   checkedAt: Date;
 }
@@ -21,6 +23,7 @@ const MonitoringLogSchema = new Schema<IMonitoringLog>(
       ref: "Monitor",
       required: true,
       index: true,
+      alias: "monitor",
     },
 
     status: {
@@ -43,6 +46,7 @@ const MonitoringLogSchema = new Schema<IMonitoringLog>(
     errorMessage: {
       type: String,
       default: null,
+      alias: "error",
     },
 
     checkedAt: {

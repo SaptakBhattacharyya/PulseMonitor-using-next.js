@@ -49,7 +49,6 @@ export default function MonitorsTable({
 
   return (
     <div className="mt-8 overflow-hidden rounded-2xl border border-[#e8e3d8] bg-white shadow-sm">
-      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#eee9df] px-6 py-5">
         <div>
           <h2 className="text-lg font-semibold text-[#253c32]">
@@ -69,7 +68,6 @@ export default function MonitorsTable({
         </button>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full min-w-[850px]">
           <thead>
@@ -89,7 +87,6 @@ export default function MonitorsTable({
                 key={monitor.id}
                 className="transition hover:bg-[#fcfbf8]"
               >
-                {/* Monitor details */}
                 <td className="px-6 py-4">
                   <div className="font-medium text-[#30483b]">
                     {monitor.name}
@@ -106,7 +103,6 @@ export default function MonitorsTable({
                   </a>
                 </td>
 
-                {/* Status */}
                 <td className="px-6 py-4">
                   <span
                     className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -138,7 +134,6 @@ export default function MonitorsTable({
                   {monitor.checked}
                 </td>
 
-                {/* Actions */}
                 <td className="relative px-6 py-4 text-right">
                   <button
                     onClick={() =>
@@ -169,7 +164,6 @@ export default function MonitorsTable({
           </tbody>
         </table>
 
-        {/* Empty state */}
         {filteredMonitors.length === 0 && (
           <div className="px-6 py-14 text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#f1f3ed]">

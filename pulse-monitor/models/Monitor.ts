@@ -10,6 +10,7 @@ export interface IMonitor {
   status: "Operational" | "Down" | "Pending";
   uptime: number;
   response: number;
+  responseTime?: number;
   statusCode: number | null;
 
   isActive: boolean;
@@ -66,6 +67,7 @@ const MonitorSchema = new Schema<IMonitor>(
     response: {
       type: Number,
       default: 0,
+      alias: "responseTime",
     },
 
     statusCode: {
